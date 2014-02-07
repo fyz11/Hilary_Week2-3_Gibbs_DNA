@@ -49,6 +49,8 @@ prior = p; % stationary dist
 % there is an A,C,G or T at node i.
 function [ x ] = fels(i,nseqs)
     if i >= nseqs
+        i
+     
         x = zeros(4,1);
         x(column(i-nseqs+1)) = 1;
     else      

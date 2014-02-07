@@ -1,4 +1,4 @@
-function [ Z, S, mu, min_ent_M, min_ent_s, max_lr_M,max_lr_s, posterior_mean_M, information ]  = find_motifs(sequence_file,K, n_iterations,burn_in,a, mu_start, mu_unknown, beta)
+function [ Z, S, mu, min_ent_M, min_ent_s, max_lr_M,max_lr_s, posterior_mean_M, information ]  = find_motifs(sequence_file,K, n_iterations,burn_in,a, homology_chk, mu_start, mu_unknown, beta)
 % This code will run the Gibbs sampler motif detection algorithm of
 % Lawrence et al. (1993) on a set of sequences inputted as a FASTA file. 
 %
@@ -7,18 +7,18 @@ function [ Z, S, mu, min_ent_M, min_ent_s, max_lr_M,max_lr_s, posterior_mean_M, 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % NOTES ON ARGUMENTS
 %
-%% sequence_file: a FASTA-formatted file containing the input sequences
-%% K:             the length of the motif 
-%% n_iterations:  number of iterations for which Gibbs sampler
+% sequence_file: a FASTA-formatted file containing the input sequences
+% K:             the length of the motif 
+% n_iterations:  number of iterations for which Gibbs sampler
 %                 should be run
-%% burn_in:       number of iterations to allow for the burn-in
+% burn_in:       number of iterations to allow for the burn-in
 %                 phase, while the MCMC is converging.
-%% a:             a constant multiplier for the uniform prior on the
+% a:             a constant multiplier for the uniform prior on the
 %                 motif
-%% mu_start:      the starting value of mu
-%% mu_unknown:    0 if mu is fixed to mu_start, 1 if mu is unknown and
+% mu_start:      the starting value of mu
+% mu_unknown:    0 if mu is fixed to mu_start, 1 if mu is unknown and
 %                 is to be estimated by MCMC.
-%% beta:          a length-two vector, containing prior parameters
+% beta:          a length-two vector, containing prior parameters
 %                 for mu (used only if mu_unknown == 1)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -121,11 +121,15 @@ for (iter = 1:n_iterations)
             %prob(j) = likelihood(seqs{i},j,M,K) - ;
             % likelihood of the motif starting here under the model 
             % defined by M
-            %background_prob(j) = likelihood(seqs{i},j,background_M,K)+felsenstein_likelihood(seqs, j*ones(1,length(seqs)), K*ones(1,length(seqs)), 0.01*ones(1,4));
             
+            if (homology_chk == 0)
+                background_prob(j) = likelihood(seqs{i},j,background_M,K);
+            end
             
-            %just felshian
-            background_prob(j) = felsenstein_likelihood(seqs, j*ones(1,length(seqs)), K*ones(1,length(seqs)), 0.01*ones(1,4));
+            if (homology_chk == 1)
+                background_prob(j) = felsenstein_likelihood(seqs, j*ones(1,length(seqs)), K, 0.01*ones(1,4));
+            end
+            
             prob(j) = likelihood(seqs{i},j,M,K);
             % likelihood of motif starting here under the random
             % background model
