@@ -1,6 +1,4 @@
-function [ Z, S, mu, min_ent_M, min_ent_s, max_lr_M,max_lr_s, posterior_mean_M, information ]  = find_motifs(sequence_file,K, ...
-                                                      n_iterations,burn_in, ...
-                                                      a, mu_start, mu_unknown, beta)
+function [ Z, S, mu, min_ent_M, min_ent_s, max_lr_M,max_lr_s, posterior_mean_M, information ]  = find_motifs(sequence_file,K, n_iterations,burn_in,a, mu_start, mu_unknown, beta)
 % This code will run the Gibbs sampler motif detection algorithm of
 % Lawrence et al. (1993) on a set of sequences inputted as a FASTA file. 
 %
@@ -120,10 +118,15 @@ for (iter = 1:n_iterations)
 
         for (j = 1:(L_i-K+1)) % For each potential starting position
             
-            prob(j) = likelihood(seqs{i},j,M,K);
+            %prob(j) = likelihood(seqs{i},j,M,K) - ;
             % likelihood of the motif starting here under the model 
             % defined by M
-            background_prob(j) = likelihood(seqs{i},j,background_M,K);
+            %background_prob(j) = likelihood(seqs{i},j,background_M,K)+felsenstein_likelihood(seqs, j*ones(1,length(seqs)), K*ones(1,length(seqs)), 0.01*ones(1,4));
+            
+            
+            %just felshian
+            background_prob(j) = felsenstein_likelihood(seqs, j*ones(1,length(seqs)), K*ones(1,length(seqs)), 0.01*ones(1,4));
+            prob(j) = likelihood(seqs{i},j,M,K);
             % likelihood of motif starting here under the random
             % background model
         end
@@ -279,15 +282,20 @@ function [ p ] = likelihood(sequence,s_i,M,K)
 % Computes the likelihood of a subsequence of length K,
 % beginning at s_i according to the model specified by M
 sub_sequence=sequence(s_i:s_i+K-1);
+%sub_sequence_cell = cell(1);
+%sub_sequence_cell{1} = sub_sequence;
+
+%homology_p = felsenstein_likelihood(sub_sequence_cell, s_i, K, 0.25);
 pm=0;
+
 for i=1:K
-    pm=pm+log(M(sub_sequence(i),i));
+    pm=pm+log(M(sub_sequence(i),i)); 
 end
 
-p=exp(pm);
+p=exp(pm) ;
+%- homology_p;
 
 end
-
 
     
 

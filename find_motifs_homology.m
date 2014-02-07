@@ -1,6 +1,4 @@
-function [ Z, S, mu, min_ent_M, min_ent_s, max_lr_M,max_lr_s, posterior_mean_M, information ]  = find_motifs(sequence_file,K, ...
-                                                      n_iterations,burn_in, ...
-                                                      a, mu_start, mu_unknown, beta)
+function [ Z, S, mu, min_ent_M, min_ent_s, max_lr_M,max_lr_s, posterior_mean_M, information ]  = find_motifs(sequence_file,K, n_iterations,burn_in,a, mu_start, mu_unknown, beta)
 % This code will run the Gibbs sampler motif detection algorithm of
 % Lawrence et al. (1993) on a set of sequences inputted as a FASTA file. 
 %
@@ -206,19 +204,22 @@ function [ M ] = sample_M(seqs,K,z,s,alpha)
         for seqs_index = 1:length_seqs
             EachSeqRow = seqs{ seqs_index };
             s_i = s(seqs_index);
-            motifCandidate_InEachSeq = EachSeqRow ( s_i + slideAloneMotif - 1 );
-            %motifCandidate_InEachSeq;
-            if motifCandidate_InEachSeq == 1
-                counts = counts + [1 0 0 0];
-            end
-            if motifCandidate_InEachSeq == 2
-                counts = counts + [0 1 0 0];
-            end
-            if motifCandidate_InEachSeq == 3
-                counts = counts + [0 0 1 0];
-            end
-            if motifCandidate_InEachSeq == 4
-                counts = counts + [0 0 0 1];
+            
+            if (s_i ~= 0)
+                motifCandidate_InEachSeq = EachSeqRow ( s_i + slideAloneMotif - 1 );
+                %motifCandidate_InEachSeq;
+                if motifCandidate_InEachSeq == 1
+                    counts = counts + [1 0 0 0];
+                end
+                if motifCandidate_InEachSeq == 2
+                    counts = counts + [0 1 0 0];
+                end
+                if motifCandidate_InEachSeq == 3
+                    counts = counts + [0 0 1 0];
+                end
+                if motifCandidate_InEachSeq == 4
+                    counts = counts + [0 0 0 1];
+                end
             end
         end        
         %use the frequecies to update dir parameters
@@ -245,19 +246,17 @@ function [ likelihood_ratio, s_i ] =  sample_s(prob,background_prob,mu)
     vector_likelihood_ratio = exp( vector_loglikelyhood_ratio );
     
     % set z to 0 for a particular probability (i.e. just return s_i = 0;
-    length_vector = length(vector_likelihood_ratio)
-    z_set_zero_probability = ()
+    length_vector = length(vector_likelihood_ratio); 
+    z_set_zero_probability = (length_vector*(1-mu))/(length_vector*(1-mu) + mu*sum(vector_likelihood_ratio));
     
-    
-    winner = gendist(vector_likelihood_ratio',1,1);
-    
-    s_i=winner;
-    likelihood_ratio = vector_likelihood_ratio (winner);
-    
-    %s_i = zeros (  length(prob )  );
-    %s_i(winner) = 1;
-    
-    
+    if (rand() < z_set_zero_probability)
+        s_i = 0;
+        likelihood_ratio =1;
+    else
+        winner = gendist(vector_likelihood_ratio',1,1);
+        s_i=winner;
+        likelihood_ratio = vector_likelihood_ratio (winner);
+    end   
 end
 
 
@@ -286,7 +285,6 @@ end
 p=exp(pm);
 
 end
-
 
     
 

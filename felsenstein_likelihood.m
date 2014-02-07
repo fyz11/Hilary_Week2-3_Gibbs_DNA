@@ -25,11 +25,13 @@ Tree = { [0.512 0.712] [0.297 0.597] [0.365 0.464] [0.464 0.564] [0.143 0.343] }
 Children = { [6 2] [3 4] [7 5] [10 11] [8 9] };
 
 nseqs = length(seq);
-column = zeros(nseqs,1);
+column = ones(length(seq),1);
+
 for (i = 1:nseqs) 
     % select the relevant bits of the sequences as specified by
     % start_positions
     column(i) = seq{i}(start_positions(i)+k-1);
+    size(column)
 end
 
 % Create the rate matrix according to the Felsenstein 1981 (F81) model
@@ -46,14 +48,14 @@ prior = p; % stationary dist
 % characters below a particular internal node i of the tree.
 % Returns a vector of length 4, containing the likelihoods if
 % there is an A,C,G or T at node i.
-function [ x ] = fels(i)
-
-    if (i >= nseqs)
+function [ x ] = fels(i,nseqs)
+    if i >= nseqs
+        i
+        nseqs
         x = zeros(4,1);
         x(column(i-nseqs+1)) = 1;
     else      
-        x = ((V * diag(exp(Tree{i}(1) * D)) * Vinv) * fels(Children{i}(1))) .* ...
-        ((V * diag(exp(Tree{i}(2) * D)) * Vinv) * fels(Children{i}(2)));
+        x = ((V * diag(exp(Tree{i}(1) * D)) * Vinv) * fels(Children{i}(1), nseqs)) .* ((V * diag(exp(Tree{i}(2) * D)) * Vinv) * fels(Children{i}(2), nseqs));
     end
 end
 
@@ -61,6 +63,6 @@ end
 % as the dot product of the prior probability for each character at
 % the root, and the likelihood of the observed characters at the
 % tips given each possible root character (ACGT).
-prob = prod(prior * fels(1));
+prob = prod(prior * fels(1,nseqs));
 
 end
